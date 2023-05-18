@@ -5,14 +5,20 @@ package converters;
 import entity.Author;
 import entity.Book;
 import entity.User;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
+import javax.json.JsonValue;
 import servlets.UserServlet;
 import session.AuthorFacade;
 import session.BookFacade;
+import session.CoverFacade;
 import session.UserFacade;
 import tools.PasswordEncrypt;
 
@@ -99,20 +105,19 @@ public class ConvertorJsonToJava {
 
    
 
-    public Book getBook(JsonObject jsonObject, AuthorFacade authorFacade) {
+    public Book getBook(JsonObject jsonObject, AuthorFacade authorFacade, CoverFacade coverFacade) {
         String bookName = jsonObject.getString("bookName","");
         String publishedYear = jsonObject.getString("publishedYear","");
         String quantity = jsonObject.getString("quantity","");
+        String cover = jsonObject.getString("cover","");
         
         Book book = new Book();
         book.setBookName(bookName);
         book.setPublishedYear(Integer.parseInt(publishedYear));
         book.setQuantity(Integer.parseInt(quantity));
+        book.setCover(coverFacade.find(Long.parseLong(cover)));
         JsonArray selectedAuthors = null;
-        try {
-            selectedAuthors = jsonObject.getJsonArray("authors");
-        } catch (Exception e) {
-        }
+        selectedAuthors = jsonObject.getJsonArray("authors");
         if(selectedAuthors != null){
             for (int i = 0; i < selectedAuthors.size(); i++) {
                 JsonString key = selectedAuthors.getJsonString(i);
@@ -120,6 +125,7 @@ public class ConvertorJsonToJava {
                  book.getAuthors().add(authorFacade.find(Long.parseLong(strKey)));
             }
         }
+        
         return book;
     }
     

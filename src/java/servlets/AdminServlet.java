@@ -22,6 +22,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import session.UserFacade;
 
 /**
@@ -49,6 +50,32 @@ public class AdminServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         JsonObjectBuilder job = Json.createObjectBuilder();
+        HttpSession session = request.getSession(false);
+        if(session == null){
+            job.add("info", "Вы не аторизованы.");
+            job.add("status", false);
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                return;
+        }
+        User authUser = (User) session.getAttribute("authUser");
+        if(authUser == null){
+            job.add("info", "Вы не аторизованы.");
+            job.add("status", false);
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                return;
+        }
+        if(!authUser.getRoles().contains(UserServlet.role.ADMINISTRATOR.toString())){
+            job.add("info", "У вас нет права. Авторизуйтесь как Администратор.");
+            job.add("status", false);
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                return;
+        }
         
         String path = request.getServletPath();
         switch (path) {
@@ -73,6 +100,14 @@ public class AdminServlet extends HttpServlet {
                 }
                 break;
             case "/addRole":
+                if("Administrator".equals(authUser.getLogin())){
+                    job.add("info", "Administrator неприкасаем");
+                    job.add("status", false);
+                        try (PrintWriter out = response.getWriter()) {
+                            out.println(job.build().toString());
+                        }
+                        break;
+                }
                 JsonReader jsonReader = Json.createReader(request.getReader());
                 JsonObject jsonObject = jsonReader.readObject();
                 String userId = jsonObject.getString("userId");
@@ -85,7 +120,9 @@ public class AdminServlet extends HttpServlet {
                     }
                     break;
                 }
-                if(!user.getRoles().contains(role)){
+               
+                if(!user.getRoles().contains(role) && UserServlet.isRole(role)){
+                    //если у пользователя нет такой роли и роль такая сущесвтвует в статическом enum
                     user.getRoles().add(role);
                     job.add("info", "Роль изменена");
                     userFacade.edit(user);
@@ -97,6 +134,14 @@ public class AdminServlet extends HttpServlet {
                 }
                 break;
             case "/removeRole":
+                if("Administrator".equals(authUser.getLogin())){
+                    job.add("info", "Administrator неприкасаем");
+                    job.add("status", false);
+                        try (PrintWriter out = response.getWriter()) {
+                            out.println(job.build().toString());
+                        }
+                        break;
+                }
                 jsonReader = Json.createReader(request.getReader());
                 jsonObject = jsonReader.readObject();
                 userId = jsonObject.getString("userId");

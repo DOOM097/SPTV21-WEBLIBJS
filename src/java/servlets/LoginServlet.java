@@ -88,6 +88,7 @@ public class LoginServlet extends HttpServlet {
                 }
                 HttpSession session = request.getSession(true);
                 session.setAttribute("authUser", user);
+                job.add("status", true);
                 job.add("info", "Вы вошли как "+user.getLogin());
                 job.add("user", new ConvertorToJson().getJsonObjectUser(user));
                 try (PrintWriter out = response.getWriter()) {

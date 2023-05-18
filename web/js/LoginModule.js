@@ -48,10 +48,15 @@ class LoginModule{
         });
         promise.then(response => response.json())
                 .then(response =>{
-                    document.getElementById('info').innerHTML=response.info;
-                    sessionStorage.setItem("authUser",JSON.stringify(response.user));
-                    document.getElementById('content').innerHTML = '';
-                    checkAuthorization();
+                    if(response.status){
+                        document.getElementById('info').innerHTML=response.info;
+                        sessionStorage.setItem("authUser",JSON.stringify(response.user));
+                        document.getElementById('content').innerHTML = '';
+                        checkAuthorization();
+                    }else{
+                        document.getElementById('info').innerHTML=response.info;
+                        
+                    }
                 })
                 .catch(error => {
                     document.getElementById('info').innerHTML='Авторизоваться не удалось ('+error+')';

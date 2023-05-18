@@ -46,6 +46,11 @@ addAuthor.addEventListener('click',e=>{
     e.preventDefault();
     authorModule.printFormAddAuthor();
 });
+let listBooks = document.getElementById('listBooks');
+listBooks.addEventListener('click',e=>{
+    e.preventDefault();
+    bookModule.printFormListBooks();
+});
 
 
 function checkAuthorization(){

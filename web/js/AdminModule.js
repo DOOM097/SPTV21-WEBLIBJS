@@ -1,4 +1,4 @@
-                            
+
 class AdminModule{
     printFormChangeRole(){
         document.getElementById('content').innerHTML =
@@ -10,7 +10,7 @@ class AdminModule{
                         <label for="user_id" class="col-sm-4 col-form-label text-end">Список пользователей и их ролей</label>
                         <div class="col-sm-8">
                             <select name="userId" id="userSelect" class="form-select">
-                                <option value="#" selected disabled>Выберите пользователя</option>
+                                <option value="" selected disabled>Выберите пользователя</option>
                                 
                             </select>
                         </div>
@@ -19,7 +19,7 @@ class AdminModule{
                         <label for="listRoles" class="col-sm-4 col-form-label text-end">Список ролей</label>
                         <div class="col-sm-8">
                             <select name="selectedRole" id="roleSelect" class="form-select">
-                                <option value="#" selected disabled>Выберите роль</option>
+                                <option value="" selected disabled>Выберите роль</option>
                                 
                             </select>
                         </div>

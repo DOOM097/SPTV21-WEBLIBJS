@@ -58,7 +58,14 @@ public class UserServlet extends HttpServlet {
         userFacade.create(user);
     }
     
-    
+    public static boolean isRole(String role){
+        for(int i=0;i<UserServlet.role.values().length;i++){
+            if(UserServlet.role.values()[i].toString().equals(role)){
+                return true;
+            }
+        }
+        return false;
+    }
     
     
     /**

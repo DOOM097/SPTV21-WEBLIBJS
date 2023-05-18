@@ -5,48 +5,40 @@
  */
 package servlets;
 
-import converters.ConvertorJsonToJava;
-import converters.ConvertorToJson;
-import entity.Author;
-import entity.Book;
+import entity.Cover;
 import entity.User;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import session.AuthorFacade;
-import session.BookFacade;
+import javax.servlet.http.Part;
 import session.CoverFacade;
-import session.UserFacade;
-import tools.PasswordEncrypt;
 
 /**
  *
  * @author user
  */
-@WebServlet(name = "BookServlet",loadOnStartup = 1, urlPatterns = {
-    "/createBook",
-    "/getListBooks",
-    
+@WebServlet(name = "UploadServlet", urlPatterns = {
+    "/addCover", 
+    "/uploadCover"
 })
-
-public class BookServlet extends HttpServlet {
-    @EJB private AuthorFacade authorFacade; 
-    @EJB private BookFacade bookFacade; 
-    @EJB private CoverFacade coverFacade; 
-    public static enum role {ADMINISTRATOR, MANAGER, USER};
-    private PasswordEncrypt pe = new PasswordEncrypt();
-
+@MultipartConfig
+public class UploadServlet extends HttpServlet {
+    @EJB CoverFacade coverFacade;
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -60,49 +52,63 @@ public class BookServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
+        JsonObjectBuilder job = Json.createObjectBuilder();
+        HttpSession session = request.getSession(false);
+        if(session == null){
+            job.add("info", "У вас нет прав, авторизуйтесь!");
+            try (PrintWriter out = response.getWriter()) {
+                out.println(job.build().toString());
+            }
+            return;
+        }
+        User authUser = (User) session.getAttribute("authUser");
+        if(authUser == null || !authUser.getRoles().contains(UserServlet.role.MANAGER.toString())){
+            job.add("info", "У вас нет прав, авторизуйтесь!");
+            try (PrintWriter out = response.getWriter()) {
+                out.println(job.build().toString());
+            }
+            return;
+        }
+        String uploadFolder = "C:\\Users\\user\\UploadDir\\SPTV21WebLibraryJS";
         String path = request.getServletPath();
         switch (path) {
-            case "/createBook":
-                JsonReader jsonReader = Json.createReader(request.getReader());
-                JsonObject jsonObject = jsonReader.readObject();
-                JsonObjectBuilder job = Json.createObjectBuilder();
-                Book book = new ConvertorJsonToJava().getBook(jsonObject, authorFacade,coverFacade);
-                if(book == null){
-                    job.add("info", "Не все поля заполнены");
-                    job.add("status", false);
-                    try (PrintWriter out = response.getWriter()) {
-                        out.println(job.build().toString());
+            case "/uploadCover":
+                List<Part> fileParts = request.getParts().stream().filter(
+                        part -> "file".equals(part.getName()))
+                        .collect(Collectors.toList());
+                StringBuilder sb = new StringBuilder();
+                for (Part filePart : fileParts) {
+                    sb.append(uploadFolder + File.separator + getFileName(filePart));
+                    File file = new File(sb.toString());
+                    file.mkdirs();
+                    try(InputStream fileContent = filePart.getInputStream()){
+                        Files.copy(fileContent, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     }
-                    break;
+                    Cover cover = new Cover();
+                    cover.setDescription(request.getParameter("description"));
+                    cover.setUrl(sb.toString());
+                    coverFacade.create(cover);
                 }
-                try {
-                    bookFacade.create(book);
-                    for(int i = 0; i < book.getAuthors().size(); i++){
-                        Author author = authorFacade.find(book.getAuthors().get(i).getId());
-                        author.getBooks().add(book);
-                        authorFacade.edit(author);
-                    }
-                    job.add("info", "Книга успешно создана");
-                    job.add("status", true);
-                } catch (Exception e) {
-                    job.add("info", "Книгу создать не удолось");
-                    job.add("status", false);
-                }
+                job.add("info", "Обложка для книги успешно загружена");
                 try (PrintWriter out = response.getWriter()) {
                     out.println(job.build().toString());
                 }
                 break;
-          
-            case "/getListBooks":
-                List<Book> listBooks = bookFacade.findAll();
-                job = Json.createObjectBuilder();
-                job.add("status", true);
-                job.add("books", new ConvertorToJson().getJABooks(listBooks));
-                try (PrintWriter out = response.getWriter()) {
-                    out.println(job.build().toString());
-                }
-                break;
+            
+        }   
+        
+        
+    }
+    private String getFileName(Part part) {
+        for (String content : part.getHeader("content-disposition").split(";")){
+            if(content.trim().startsWith("filename")){
+                return content
+                        .substring(content.indexOf('=')+1)
+                        .trim()
+                        .replace("\"",""); 
+            }
         }
+        return null;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

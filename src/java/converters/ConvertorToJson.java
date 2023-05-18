@@ -14,102 +14,105 @@ import javax.json.JsonObjectBuilder;
 
 
 public class ConvertorToJson {
-    JsonArrayBuilder jab = Json.createArrayBuilder();
-    JsonObjectBuilder job = Json.createObjectBuilder();
     
     public JsonObject getJsonObjectUser(User user){
-        job.add("id", user.getId());
-        job.add("firstname", user.getFirstname());
-        job.add("lastname", user.getLastname());
-        job.add("phone", user.getPhone());
-        job.add("login", user.getLogin());
-        job.add("roles", getJsonArrayRoles(user.getRoles()));
-        return job.build();
+        JsonObjectBuilder jobUser = Json.createObjectBuilder();
+        jobUser.add("id", user.getId());
+        jobUser.add("firstname", user.getFirstname());
+        jobUser.add("lastname", user.getLastname());
+        jobUser.add("phone", user.getPhone());
+        jobUser.add("login", user.getLogin());
+        jobUser.add("roles", getJsonArrayRoles(user.getRoles()));
+        return jobUser.build();
     }
     public JsonArray getJsonArrayRoles(List<String> roles){
+        JsonArrayBuilder jabRoles = Json.createArrayBuilder();
         for (int i = 0; i < roles.size(); i++) {
             String role = roles.get(i);
-            jab.add(role);
+            jabRoles.add(role);
         }
-        return jab.build();
+        return jabRoles.build();
     }
    
     public JsonArray getJsonArrayUsers(List<User>listUsers){
+        JsonArrayBuilder jabUsers = Json.createArrayBuilder();
         for (int i = 0; i < listUsers.size(); i++) {
             User user = listUsers.get(i);
-            jab.add(getJsonObjectUser(user));
+            jabUsers.add(getJsonObjectUser(user));
         }
-        return jab.build();
+        return jabUsers.build();
     }
     
     public JsonObject getJOAuthor(Author author){
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        JsonObjectBuilder job = Json.createObjectBuilder();
-        job.add("id", author.getId());
-        job.add("firstname", author.getFirstname());
-        job.add("lastname", author.getLastname());
-        job.add("birthYear", author.getBirthYear());
+        JsonArrayBuilder jabAuthors = Json.createArrayBuilder();
+        JsonObjectBuilder jobAuthor = Json.createObjectBuilder();
+        jobAuthor.add("id", author.getId());
+        jobAuthor.add("firstname", author.getFirstname());
+        jobAuthor.add("lastname", author.getLastname());
+        jobAuthor.add("birthYear", author.getBirthYear());
         List<Book> authorBooks = author.getBooks();
-        job.add("books", getJABooksWithoutAuthors(authorBooks));
-        return job.build();
+        jobAuthor.add("books", getJABooksWithoutAuthors(authorBooks));
+        return jobAuthor.build();
     }
     public JsonArray getJABooksWithoutAuthors(List<Book> listBooks){
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        JsonObjectBuilder job = Json.createObjectBuilder();
+        JsonArrayBuilder jabBooksWithoutAuthors = Json.createArrayBuilder();
+        JsonObjectBuilder jobBook = Json.createObjectBuilder();
         for (int i = 0; i < listBooks.size(); i++) {
             Book book = listBooks.get(i);
-            job.add("bookName", book.getBookName());
-            job.add("PublishedYear", book.getPublishedYear());
-            job.add("quantity", book.getQuantity());
-            jab.add(job.build());
+            jobBook.add("id", book.getId());
+            jobBook.add("bookName", book.getBookName());
+            jobBook.add("PublishedYear", book.getPublishedYear());
+            jobBook.add("quantity", book.getQuantity());
+            jabBooksWithoutAuthors.add(jobBook.build());
         }
-        return jab.build();
+        return jabBooksWithoutAuthors.build();
     }
     public JsonArray getJAAuthors(List<Author> authors){
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        JsonObjectBuilder job = Json.createObjectBuilder();
+        JsonArrayBuilder jabAuthors = Json.createArrayBuilder();
+        JsonObjectBuilder jobAuthor = Json.createObjectBuilder();
         for (int i = 0; i < authors.size(); i++) {
-            job.add("id", authors.get(i).getId());
-            job.add("firstname", authors.get(i).getFirstname());
-            job.add("lastname", authors.get(i).getLastname());
-            job.add("birthYear", authors.get(i).getBirthYear());
-            job.add("books", getJABooksWithoutAuthors(authors.get(i).getBooks()));
-            jab.add(job.build());
+            jobAuthor.add("id", authors.get(i).getId());
+            jobAuthor.add("firstname", authors.get(i).getFirstname());
+            jobAuthor.add("lastname", authors.get(i).getLastname());
+            jobAuthor.add("birthYear", authors.get(i).getBirthYear());
+            jobAuthor.add("books", getJABooksWithoutAuthors(authors.get(i).getBooks()));
+            jabAuthors.add(jobAuthor.build());
         }
-        return jab.build();
+        return jabAuthors.build();
     }
     public JsonObject getJOBook(Book book) {
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        JsonObjectBuilder job = Json.createObjectBuilder();
-        job.add("bookName", book.getBookName());
-        job.add("PublishedYear", book.getPublishedYear());
-        job.add("quantity", book.getQuantity());
-        job.add("authors", getJAAuthorsWithoutBooks(book.getAuthors()));
-        return job.build();
+        JsonObjectBuilder jobBook = Json.createObjectBuilder();
+        jobBook.add("id", book.getId());
+        jobBook.add("bookName", book.getBookName());
+        jobBook.add("PublishedYear", book.getPublishedYear());
+        jobBook.add("quantity", book.getQuantity());
+        jobBook.add("authors", getJAAuthorsWithoutBooks(book.getAuthors()));
+        return jobBook.build();
     }
     public JsonArray getJABooks(List<Book> listBooks) {
-        JsonArrayBuilder jab = Json.createArrayBuilder();
-        JsonObjectBuilder job = Json.createObjectBuilder();
+        JsonArrayBuilder jabBooks = Json.createArrayBuilder();
+        JsonObjectBuilder jobBook = Json.createObjectBuilder();
         for (int i = 0; i < listBooks.size(); i++) {
             Book book = listBooks.get(i);
-            job.add("bookName", book.getBookName());
-            job.add("PublishedYear", book.getPublishedYear());
-            job.add("quantity", book.getQuantity());
-            job.add("authors", getJAAuthorsWithoutBooks(book.getAuthors()));
-            jab.add(job.build());
+            jobBook.add("id", book.getId());
+            jobBook.add("bookName", book.getBookName());
+            jobBook.add("PublishedYear", book.getPublishedYear());
+            jobBook.add("quantity", book.getQuantity());
+            jobBook.add("authors", getJAAuthorsWithoutBooks(book.getAuthors()));
+            jabBooks.add(jobBook.build());
         }
-        return jab.build();
+        return jabBooks.build();
     }
     public JsonArray getJAAuthorsWithoutBooks(List<Author> authors){
-        JsonArrayBuilder jab = Json.createArrayBuilder();
+        JsonArrayBuilder jabAuthorsWithoutBooks = Json.createArrayBuilder();
         JsonObjectBuilder job = Json.createObjectBuilder();
         for (int i = 0; i < authors.size(); i++) {
             job.add("id", authors.get(i).getId());
             job.add("firstname", authors.get(i).getFirstname());
             job.add("lastname", authors.get(i).getLastname());
             job.add("birthYear", authors.get(i).getBirthYear());
-            jab.add(job.build());
+            jabAuthorsWithoutBooks.add(job.build());
         }
-        return jab.build();
+        return jabAuthorsWithoutBooks.build();
     }
 }
