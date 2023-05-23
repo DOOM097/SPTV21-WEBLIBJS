@@ -4,6 +4,7 @@ package converters;
 
 import entity.Author;
 import entity.Book;
+import entity.Cover;
 import entity.User;
 import java.util.List;
 import javax.json.Json;
@@ -86,6 +87,7 @@ public class ConvertorToJson {
         jobBook.add("bookName", book.getBookName());
         jobBook.add("PublishedYear", book.getPublishedYear());
         jobBook.add("quantity", book.getQuantity());
+        jobBook.add("cover", getJOCover(book.getCover()));
         jobBook.add("authors", getJAAuthorsWithoutBooks(book.getAuthors()));
         return jobBook.build();
     }
@@ -114,5 +116,20 @@ public class ConvertorToJson {
             jabAuthorsWithoutBooks.add(job.build());
         }
         return jabAuthorsWithoutBooks.build();
+    }
+    public JsonObject getJOCover(Cover cover){
+        JsonObjectBuilder jobCover = Json.createObjectBuilder();
+        jobCover.add("id", cover.getId());
+        jobCover.add("description", cover.getDescription());
+        jobCover.add("url", cover.getUrl());
+        return jobCover.build();
+    }
+    public JsonArray getJACovers(List<Cover>listCovers){
+        JsonArrayBuilder jabCovers = Json.createArrayBuilder();
+        JsonObjectBuilder jobCover = Json.createObjectBuilder();
+        for(int i = 0; i<listCovers.size();i++){
+            jabCovers.add(getJOCover(listCovers.get(i)));
+        }
+        return jabCovers.build();
     }
 }

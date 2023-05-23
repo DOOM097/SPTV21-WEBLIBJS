@@ -7,6 +7,7 @@ package servlets;
 
 import converters.ConvertorJsonToJava;
 import converters.ConvertorToJson;
+import entity.Book;
 import entity.User;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import session.BookFacade;
 import session.UserFacade;
 import tools.PasswordEncrypt;
 
@@ -30,14 +32,16 @@ import tools.PasswordEncrypt;
  * @author user
  */
 @WebServlet(name = "UserServlet",loadOnStartup = 1, urlPatterns = {
-    "/createUser",
+    
     "/changeUserProfile",
-    "/getListUsers",
+    "/getBook",
+    
     
 })
 
 public class UserServlet extends HttpServlet {
     @EJB private UserFacade userFacade; 
+    @EJB private BookFacade bookFacade; 
     public static enum role {ADMINISTRATOR, MANAGER, USER};
     private PasswordEncrypt pe = new PasswordEncrypt();
 
@@ -81,38 +85,40 @@ public class UserServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
-        String path = request.getServletPath();
-        switch (path) {
-            case "/createUser":
-                JsonReader jsonReader = Json.createReader(request.getReader());
-                JsonObject jsonObject = jsonReader.readObject();
-                JsonObjectBuilder job = Json.createObjectBuilder();
-                User user = new ConvertorJsonToJava().getUser(jsonObject);
-                if(user == null){
-                    job.add("info", "Не все поля заполнены");
-                    job.add("status", false);
-                    try (PrintWriter out = response.getWriter()) {
-                        out.println(job.build().toString());
-                    }
-                    break;
-                }
-                try {
-                    userFacade.create(user);
-                    job.add("info", "Пользователь успешно создан");
-                    job.add("status", true);
-                } catch (Exception e) {
-                    job.add("info", "Пользователя создать не удолось");
-                    job.add("status", false);
-                }
+        JsonObjectBuilder job = Json.createObjectBuilder();
+        HttpSession session = request.getSession(false);
+        if(session == null){
+            job.add("info", "Вы не аторизованы.");
+            job.add("status", false);
                 try (PrintWriter out = response.getWriter()) {
                     out.println(job.build().toString());
                 }
-                break;
+                return;
+        }
+        User authUser = (User) session.getAttribute("authUser");
+        if(authUser == null){
+            job.add("info", "Вы не аторизованы.");
+            job.add("status", false);
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                return;
+        }
+        if(!authUser.getRoles().contains(UserServlet.role.USER.toString())){
+            job.add("info", "У вас нет права. Авторизуйтесь как Администратор.");
+            job.add("status", false);
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                return;
+        }
+        String path = request.getServletPath();
+        switch (path) {
             case "/changeUserProfile":
-                jsonReader = Json.createReader(request.getReader());
-                jsonObject = jsonReader.readObject();
+                JsonReader jsonReader = Json.createReader(request.getReader());
+                JsonObject jsonObject = jsonReader.readObject();
                 job = Json.createObjectBuilder();
-                user = new ConvertorJsonToJava().getUser(jsonObject, userFacade);
+                User user = new ConvertorJsonToJava().getUser(jsonObject, userFacade);
                 if(user == null){
                     job.add("info", "Не все поля заполнены");
                     job.add("status", false);
@@ -124,7 +130,7 @@ public class UserServlet extends HttpServlet {
                 try {
                     userFacade.edit(user);
                     //Состояние пользователя изменилось -> запоминаем его в сессии
-                    HttpSession session = request.getSession(false);
+                    session = request.getSession(false);
                     if(session.getAttribute("authUser")!= null ){
                         session.setAttribute("authUser", user);
                     }
@@ -139,11 +145,11 @@ public class UserServlet extends HttpServlet {
                     out.println(job.build().toString());
                 }
                 break;
-            case "/getListUsers":
-                List<User> listUsers = userFacade.findAll();
-                job = Json.createObjectBuilder();
+            case "/getBook":
+                String bookId = request.getParameter("bookId");
+                Book book = bookFacade.find(Long.parseLong(bookId));
                 job.add("status", true);
-                job.add("users", new ConvertorToJson().getJsonArrayUsers(listUsers));
+                job.add("book", new ConvertorToJson().getJOBook(book));
                 try (PrintWriter out = response.getWriter()) {
                     out.println(job.build().toString());
                 }

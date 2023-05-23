@@ -10,7 +10,6 @@ import entity.User;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.json.Json;
@@ -33,6 +32,7 @@ import session.UserFacade;
     "/changeRolesData",
     "/addRole",
     "/removeRole",
+    "/getListUsers",
 })
 public class AdminServlet extends HttpServlet {
     @EJB private UserFacade userFacade;
@@ -100,14 +100,7 @@ public class AdminServlet extends HttpServlet {
                 }
                 break;
             case "/addRole":
-                if("Administrator".equals(authUser.getLogin())){
-                    job.add("info", "Administrator неприкасаем");
-                    job.add("status", false);
-                        try (PrintWriter out = response.getWriter()) {
-                            out.println(job.build().toString());
-                        }
-                        break;
-                }
+                
                 JsonReader jsonReader = Json.createReader(request.getReader());
                 JsonObject jsonObject = jsonReader.readObject();
                 String userId = jsonObject.getString("userId");
@@ -121,6 +114,15 @@ public class AdminServlet extends HttpServlet {
                     break;
                 }
                
+                if("Administrator".equals(user.getLogin())){
+                    job.add("info", "Administrator неприкасаем");
+                    job.add("status", false);
+                        try (PrintWriter out = response.getWriter()) {
+                            out.println(job.build().toString());
+                        }
+                        break;
+                }
+                
                 if(!user.getRoles().contains(role) && UserServlet.isRole(role)){
                     //если у пользователя нет такой роли и роль такая сущесвтвует в статическом enum
                     user.getRoles().add(role);
@@ -134,14 +136,6 @@ public class AdminServlet extends HttpServlet {
                 }
                 break;
             case "/removeRole":
-                if("Administrator".equals(authUser.getLogin())){
-                    job.add("info", "Administrator неприкасаем");
-                    job.add("status", false);
-                        try (PrintWriter out = response.getWriter()) {
-                            out.println(job.build().toString());
-                        }
-                        break;
-                }
                 jsonReader = Json.createReader(request.getReader());
                 jsonObject = jsonReader.readObject();
                 userId = jsonObject.getString("userId");
@@ -153,6 +147,14 @@ public class AdminServlet extends HttpServlet {
                         out.println(job.build().toString());
                     }
                     break;
+                }
+                if("Administrator".equals(user.getLogin())){
+                    job.add("info", "Administrator неприкасаем");
+                    job.add("status", false);
+                        try (PrintWriter out = response.getWriter()) {
+                            out.println(job.build().toString());
+                        }
+                        break;
                 }
                 if(user.getRoles().contains(role)){
                     user.getRoles().remove(role);
@@ -166,6 +168,15 @@ public class AdminServlet extends HttpServlet {
                     out.println(job.build().toString());
                 }
                 break;
+            case "/getListUsers":
+                List<User> listUsers = userFacade.findAll();
+                job = Json.createObjectBuilder();
+                job.add("status", true);
+                job.add("users", new ConvertorToJson().getJsonArrayUsers(listUsers));
+                try (PrintWriter out = response.getWriter()) {
+                    out.println(job.build().toString());
+                }
+                break;    
         }
     }
 
